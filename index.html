@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تشخیص دیابت</title>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0a0a0a;
+    --paper: #faf9f6;
+    --muted: #6b7280;
+    --line: #e5e5e0;
+    --accent: #0d9488;
+    --accent-soft: #ccfbf1;
+    --warn: #dc2626;
+    --warn-soft: #fee2e2;
+    --ok: #16a34a;
+    --ok-soft: #dcfce7;
+  }
+
+  body {
+    font-family: 'Vazirmatn', Tahoma, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 32px 20px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    opacity: 0.35;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .app {
+    width: 100%;
+    max-width: 880px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 24px;
+    border-bottom: 2px solid var(--ink);
+    margin-bottom: 40px;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 800;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+
+  .brand-mark {
+    width: 40px;
+    height: 40px;
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  .hero {
+    margin-bottom: 36px;
+    text-align: right;
+  }
+
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 42px);
+    font-weight: 900;
+    line-height: 1.25;
+    letter-spacing: -1px;
+    margin-bottom: 12px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .hero p {
+    font-size: 15px;
+    color: var(--muted);
+    max-width: 520px;
+    line-height: 1.85;
+  }
+
+  .steps {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 32px;
+  }
+
+  .step-pill {
+    flex: 1;
+    height: 6px;
+    background: var(--line);
+    border-radius: 100px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .step-pill::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .step-pill.filled::after { transform: scaleX(1); }
+
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .field-card {
+    background: #fff;
+    border: 2px solid var(--line);
+    border-radius: 20px;
+    padding: 22px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  .field-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 24px -12px rgba(0,0,0,0.15);
+  }
+
+  .field-card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+
+  .field-card.active {
+    border-color: var(--accent);
+    background: linear-gradient(180deg, #fff 0%, #f0fdfa 100%);
+  }
+
+  .field-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .field-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .field-label .emoji { font-size: 18px; }
+
+  .field-unit {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--paper);
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .field-input {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    font-size: 32px;
+    font-weight: 800;
+    color: var(--ink);
+    outline: none;
+    letter-spacing: -1px;
+  }
+
+  .field-input::placeholder {
+    color: var(--line);
+    font-weight: 700;
+  }
+
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input[type=number] { -moz-appearance: textfield; }
+
+  .field-hint {
+    font-size: 11.5px;
+    color: var(--muted);
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .cta {
+    width: 100%;
+    padding: 20px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: 20px;
+    font-family: inherit;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-inline: 28px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: -0.3px;
+  }
+
+  .cta:hover {
+    background: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 16px 32px -12px rgba(13, 148, 136, 0.5);
+  }
+
+  .cta:active { transform: translateY(0); }
+
+  .cta:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .cta .arrow {
+    width: 36px;
+    height: 36px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: transform 0.3s;
+  }
+
+  .cta:hover .arrow { transform: translateX(-6px); }
+
+  .alert {
+    margin-top: 16px;
+    padding: 16px 20px;
+    background: var(--warn-soft);
+    color: var(--warn);
+    border-radius: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    display: none;
+    align-items: center;
+    gap: 10px;
+    animation: shake 0.5s;
+  }
+
+  .alert.show { display: flex; }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+
+  .result-box {
+    margin-top: 24px;
+    border-radius: 24px;
+    padding: 32px 28px;
+    display: none;
+    animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(24px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  .result-box.show { display: block; }
+
+  .result-box.positive {
+    background: var(--warn-soft);
+    border: 2px solid var(--warn);
+  }
+
+  .result-box.negative {
+    background: var(--ok-soft);
+    border: 2px solid var(--ok);
+  }
+
+  .result-top {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 16px;
+  }
+
+  .result-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    flex-shrink: 0;
+  }
+
+  .positive .result-icon { background: var(--warn); }
+  .negative .result-icon { background: var(--ok); }
+
+  .result-title {
+    font-size: 22px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+  }
+
+  .positive .result-title { color: var(--warn); }
+  .negative .result-title { color: var(--ok); }
+
+  .result-subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  .result-desc {
+    font-size: 14px;
+    line-height: 1.9;
+    color: var(--ink);
+    padding-top: 16px;
+    border-top: 1px dashed rgba(0,0,0,0.15);
+  }
+
+  .details-toggle {
+    margin-top: 20px;
+    width: 100%;
+    background: transparent;
+    border: 2px dashed rgba(0,0,0,0.15);
+    border-radius: 14px;
+    padding: 12px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .details-toggle:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .details-content {
+    margin-top: 14px;
+    padding: 18px;
+    background: rgba(255,255,255,0.6);
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 2;
+    display: none;
+    font-family: monospace;
+    direction: ltr;
+    text-align: left;
+    color: #444;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .details-content.show { display: block; }
+
+  .details-content .row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px dotted rgba(0,0,0,0.1);
+  }
+
+  .details-content .row:last-child { border: none; }
+
+  .details-content .key { color: #888; }
+  .details-content .val { font-weight: 700; color: #000; }
+
+  .footnote {
+    margin-top: 32px;
+    padding-top: 20px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .footnote .dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  .footnote .dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--line);
+  }
+
+  .footnote .dots span:first-child { background: var(--accent); }
+
+  @media (max-width: 640px) {
+    .fields-grid { grid-template-columns: 1fr; }
+    .field-input { font-size: 26px; }
+    .hero h1 { font-size: 28px; }
+    .topbar { flex-wrap: wrap; gap: 12px; }
+    .result-top { flex-direction: column; text-align: center; }
+    .footnote { flex-direction: column; gap: 10px; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">✚</div>
+      <span>دیابت‌یار</span>
+    </div>
+  </div>
+
+  <div class="hero">
+    <h1>سلامت خود را در <em>۳۰ ثانیه</em> بررسی کنید</h1>
+    <p>چهار مقدار ساده را وارد کنید و بلافاصله نتیجه تحلیل هوشمند را بر اساس مدل درخت تصمیم ببینید.</p>
+  </div>
+
+  <div class="steps" id="steps">
+    <div class="step-pill"></div>
+    <div class="step-pill"></div>
+    <div class="step-pill"></div>
+    <div class="step-pill"></div>
+  </div>
+
+  <div class="fields-grid">
+    <div class="field-card" data-field="glucose">
+      <div class="field-head">
+        <div class="field-label"><span class="emoji">🩸</span> قند خون</div>
+        <span class="field-unit">mg/dL</span>
+      </div>
+      <input type="number" class="field-input" id="glucose" placeholder="148" step="any">
+      <div class="field-hint">مقدار گلوکز ناشتا</div>
+    </div>
+
+    <div class="field-card" data-field="age">
+      <div class="field-head">
+        <div class="field-label"><span class="emoji">🎂</span> سن</div>
+        <span class="field-unit">سال</span>
+      </div>
+      <input type="number" class="field-input" id="age" placeholder="33" step="any">
+      <div class="field-hint">سن به سال کامل</div>
+    </div>
+
+    <div class="field-card" data-field="bmi">
+      <div class="field-head">
+        <div class="field-label"><span class="emoji">⚖️</span> شاخص BMI</div>
+        <span class="field-unit">kg/m²</span>
+      </div>
+      <input type="number" class="field-input" id="bmi" placeholder="33.6" step="any">
+      <div class="field-hint">وزن (kg) ÷ قد² (m)</div>
+    </div>
+
+    <div class="field-card" data-field="dpf">
+      <div class="field-head">
+        <div class="field-label"><span class="emoji">🧬</span> شجره‌نامه</div>
+        <span class="field-unit">DPF</span>
+      </div>
+      <input type="number" class="field-input" id="dpf" placeholder="0.627" step="any">
+      <div class="field-hint">عملکرد سابقه خانوادگی</div>
+    </div>
+  </div>
+
+  <button class="cta" id="submitBtn" onclick="predict()">
+    <span id="btnText">شروع تحلیل هوشمند</span>
+    <span class="arrow">←</span>
+  </button>
+
+  <div class="alert" id="alert">
+    <span>⚠️</span>
+    <span id="alertText">لطفاً همه مقادیر را به‌درستی وارد کنید.</span>
+  </div>
+
+  <div class="result-box" id="resultBox">
+    <div class="result-top">
+      <div class="result-icon" id="resultIcon">✓</div>
+      <div>
+        <div class="result-title" id="resultTitle"></div>
+        <div class="result-subtitle" id="resultSubtitle"></div>
+      </div>
+    </div>
+    <div class="result-desc" id="resultDesc"></div>
+    <button class="details-toggle" onclick="toggleDetails()">مشاهده جزئیات تحلیل ▾</button>
+    <div class="details-content" id="detailsContent"></div>
+  </div>
+
+  <div class="footnote">
+    <span>⚕️ این ابزار جایگزین تشخیص پزشک نیست</span>
+    <div class="dots"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<script>
+const inputs = ['glucose', 'age', 'bmi', 'dpf'];
+const stepPills = document.querySelectorAll('.step-pill');
+const cards = document.querySelectorAll('.field-card');
+
+inputs.forEach((id, i) => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', () => {
+    const filled = el.value.trim() !== '' && !isNaN(parseFloat(el.value));
+    stepPills[i].classList.toggle('filled', filled);
+    cards[i].classList.toggle('active', filled);
+  });
+});
+
+function toggleDetails() {
+  const c = document.getElementById('detailsContent');
+  c.classList.toggle('show');
+}
+
+function predict() {
+  const glucose = parseFloat(document.getElementById('glucose').value);
+  const age = parseFloat(document.getElementById('age').value);
+  const bmi = parseFloat(document.getElementById('bmi').value);
+  const dpf = parseFloat(document.getElementById('dpf').value);
+
+  const alertEl = document.getElementById('alert');
+  const resultBox = document.getElementById('resultBox');
+  const btn = document.getElementById('submitBtn');
+  const btnText = document.getElementById('btnText');
+
+  if ([glucose, age, bmi, dpf].some(v => isNaN(v) || v < 0)) {
+    alertEl.classList.add('show');
+    resultBox.classList.remove('show');
+    return;
+  }
+  alertEl.classList.remove('show');
+
+  btn.disabled = true;
+  btnText.textContent = 'در حال پردازش...';
+
+  setTimeout(() => {
+    let result;
+    let path = [];
+    if (glucose <= 154) {
+      path.push('Glucose ≤ 154 → شاخه چپ');
+      if (age <= 29) {
+        path.push('Age ≤ 29');
+        result = 0;
+      } else {
+        path.push('Age > 29');
+        if (bmi <= 26.700) {
+          path.push('BMI ≤ 26.700');
+          result = 0;
+        } else {
+          path.push('BMI > 26.700');
+          if (glucose <= 101) {
+            path.push('Glucose ≤ 101');
+            if (dpf <= 0.709) {
+              path.push('DPF ≤ 0.709');
+              result = 0;
+            } else {
+              path.push('DPF > 0.709');
+              result = 1;
+            }
+          } else {
+            path.push('Glucose > 101');
+            if (bmi <= 43.300) {
+              path.push('BMI ≤ 43.300');
+              if (dpf <= 0.464) {
+                path.push('DPF ≤ 0.464');
+                result = 0;
+              } else {
+                path.push('DPF > 0.464');
+                result = 1;
+              }
+            } else {
+              path.push('BMI > 43.300');
+              result = 1;
+            }
+          }
+        }
+      }
+    } else {
+      path.push('Glucose > 154 → شاخه راست');
+      if (dpf <= 0.307) {
+        path.push('DPF ≤ 0.307');
+        if (dpf <= 0.287) {
+          path.push('DPF ≤ 0.287');
+          result = 1;
+        } else {
+          path.push('DPF > 0.287');
+          result = 0;
+        }
+      } else {
+        path.push('DPF > 0.307');
+        result = 1;
+      }
+    }
+
+    resultBox.className = 'result-box show ' + (result === 1 ? 'positive' : 'negative');
+    if (result === 1) {
+      document.getElementById('resultIcon').textContent = '⚠️';
+      document.getElementById('resultTitle').textContent = 'احتمال وجود دیابت';
+      document.getElementById('resultSubtitle').textContent = 'نتیجه: مثبت';
+      document.getElementById('resultDesc').textContent =
+        'بر اساس مدل درخت تصمیم، شرایط شما با الگوی افراد در معرض دیابت مطابقت دارد. توصیه می‌شود برای انجام آزمایش‌های تکمیلی و بررسی دقیق به پزشک مراجعه کنید.';
+    } else {
+      document.getElementById('resultIcon').textContent = '✓';
+      document.getElementById('resultTitle').textContent = 'عدم احتمال دیابت';
+      document.getElementById('resultSubtitle').textContent = 'نتیجه: منفی';
+      document.getElementById('resultDesc').textContent =
+        'بر اساس مدل درخت تصمیم، نشانه‌ای از وجود دیابت مشاهده نشد. با این حال، حفظ سبک زندگی سالم و انجام معاینات دوره‌ای را فراموش نکنید.';
+    }
+
+    const details = document.getElementById('detailsContent');
+    details.innerHTML = `
+      <div class="row"><span class="key">Glucose</span><span class="val">${glucose}</span></div>
+      <div class="row"><span class="key">Age</span><span class="val">${age}</span></div>
+      <div class="row"><span class="key">BMI</span><span class="val">${bmi}</span></div>
+      <div class="row"><span class="key">DPF</span><span class="val">${dpf}</span></div>
+      <div class="row"><span class="key">Result</span><span class="val">${result}</span></div>
+      <div style="margin-top:10px; color:#666; font-family:'Vazirmatn',sans-serif; direction:rtl; text-align:right;">
+        <strong style="color:#000">مسیر تصمیم‌گیری:</strong><br>
+        ${path.map(p => `• ${p}`).join('<br>')}
+      </div>
+    `;
+    details.classList.remove('show');
+
+    btn.disabled = false;
+    btnText.textContent = 'تحلیل دوباره';
+    resultBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 500);
+}
+
+document.querySelectorAll('input').forEach(input => {
+  input.addEventListener('keypress', e => {
+    if (e.key === 'Enter') predict();
+  });
+});
+</script>
+</body>
+</html>
